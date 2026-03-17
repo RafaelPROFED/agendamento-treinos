@@ -1,0 +1,68 @@
+<!DOCTYPE html>
+<html lang="pt-br">
+<head>
+  <meta charset="UTF-8">
+  <title>Treinos</title>
+  <style>
+    body { font-family: Arial, sans-serif; background: #f0f0f0; margin: 0; padding: 20px; }
+    h2 { color: #333; text-align: center; }
+    .container { max-width: 600px; margin: 0 auto; }
+    .treino { background: white; padding: 20px; border-radius: 10px; margin: 12px 0; box-shadow: 0 2px 8px rgba(0,0,0,0.1); }
+    .treino h3 { margin: 0 0 8px; color: #333; }
+    .treino p { margin: 4px 0; color: #666; }
+    button { padding: 10px 20px; background: #4CAF50; color: white; border: none; border-radius: 6px; cursor: pointer; }
+    button:hover { background: #45a049; }
+    .sair { background: #e53935; float: right; }
+    .sair:hover { background: #c62828; }
+  </style>
+</head>
+<body>
+  <div class="container">
+    <h2>🏋️ Treinos disponíveis</h2>
+    <button class="sair" onclick="sair()">Sair</button>
+    <div id="lista"></div>
+  </div>
+  <script>
+    const usuario = JSON.parse(localStorage.getItem('usuario'));
+    if (!usuario) window.location.href = 'index.html';
+
+    async function carregarTreinos() {
+      const res = await fetch('http://localhost:3000/treinos');
+      const treinos = await res.json();
+      const lista = document.getElementById('lista');
+      lista.innerHTML = '';
+      if (treinos.length === 0) {
+        lista.innerHTML = '<p style="text-align:center;color:#999">Nenhum treino cadastrado ainda.</p>';
+        return;
+      }
+      treinos.forEach(t => {
+        lista.innerHTML += `
+          <div class="treino">
+            <h3>${t.titulo}</h3>
+            <p>${t.descricao}</p>
+            <p>🕐 ${t.horario} | Vagas: ${t.vagas}</p>
+            <button onclick="agendar(${t.id})">Agendar</button>
+          </div>`;
+      });
+    }
+
+    async function agendar(treino_id) {
+      const res = await fetch('http://localhost:3000/agendamentos', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ usuario_id: usuario.id, treino_id })
+      });
+      const data = await res.json();
+      if (res.ok) alert('Treino agendado com sucesso!');
+      else alert(data.erro);
+    }
+
+    function sair() {
+      localStorage.removeItem('usuario');
+      window.location.href = 'index.html';
+    }
+
+    carregarTreinos();
+  </script>
+</body>
+</html>
